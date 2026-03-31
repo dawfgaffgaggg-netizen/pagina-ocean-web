@@ -1,0 +1,9 @@
+# Videos — too large for GitHub/Vercel, host externally
+*.mp4
+*.mov
+*.avi
+*.webm
+
+# Large images (optional — comment out if you want to include them)
+# *.png
+# *.jpg
