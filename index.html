@@ -1299,7 +1299,7 @@
 
   function showDcUser(user){
     document.getElementById('dcAvatar').src = user.avatar;
-    const badge = user.isWScripter
+    const badge = (user.isWScripter || user.hasVipRole)
       ? '<span class="ws-badge">🧠 W Scripter</span>'
       : '';
     document.getElementById('dcName').innerHTML = (user.globalName || user.username) + badge;
@@ -1967,19 +1967,8 @@
 
           // Check guild roles
           let hasVipRole = false;
+          // Check W Scripter role automatically
           try {
-            const memberRes = await fetch(
-              `https://discord.com/api/users/@me/guilds/x3aCPFKzwky/member`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
-            // Try with guild ID directly
-            const guildRes = await fetch(
-              `https://discord.com/api/users/@me/guilds`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
-            const guilds = await guildRes.json();
-            // We need the member endpoint with guild ID
-            // Guild ID from invite x3aCPFKzwky — fetch member
             const memRes = await fetch(
               `https://discord.com/api/users/@me/guilds/1447232125823746112/member`,
               { headers: { Authorization: `Bearer ${token}` } }
@@ -2078,10 +2067,28 @@
       return;
     }
 
-    // Restore session on page load
+    // Restore session on page load — re-check role with saved token
     const saved = localStorage.getItem('dc_user');
     console.log('[Discord] saved session:', saved ? 'yes' : 'no');
-    if(saved) showDcUser(JSON.parse(saved));
+    if(saved){
+      const u = JSON.parse(saved);
+      showDcUser(u);
+      // Re-verify role silently if token still in session
+      const t = sessionStorage.getItem('dc_token');
+      if(t){
+        fetch(`https://discord.com/api/users/@me/guilds/1447232125823746112/member`,
+          { headers:{ Authorization:`Bearer ${t}` } })
+        .then(r=>r.ok?r.json():null)
+        .then(mem=>{
+          if(mem){
+            u.hasVipRole = (mem.roles||[]).includes('1469774407881719848');
+            u.isWScripter = u.hasVipRole;
+            localStorage.setItem('dc_user', JSON.stringify(u));
+            showDcUser(u);
+          }
+        }).catch(_=>{});
+      }
+    }
   })();
 </script>
 
