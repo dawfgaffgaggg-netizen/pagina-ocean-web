@@ -1759,6 +1759,8 @@
         user.hasVipRole  = hasRole;
         user.isWScripter = hasRole;
         localStorage.setItem('dc_user', JSON.stringify(user));
+        if(hasRole) sessionStorage.setItem('ws_verified_' + user.id, '1');
+        else sessionStorage.removeItem('ws_verified_' + user.id);
         showDcUser(user);
         if(btn){
           btn.style.color = hasRole ? '#00dc82' : '#ff6b6b';
@@ -1970,21 +1972,8 @@
             ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`
             : `https://cdn.discordapp.com/embed/avatars/0.png`;
 
-          // Check guild roles
+          // Role check only happens when user clicks the button manually
           let hasVipRole = false;
-          // Check W Scripter role automatically — immediate with fresh token
-          try {
-            const memRes = await fetch(
-              `https://discord.com/api/users/@me/guilds/1447232125823746112/member`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
-            if(memRes.ok){
-              const mem = await memRes.json();
-              hasVipRole = (mem.roles||[]).includes('1469774407881719848');
-            } else {
-              hasVipRole = false;
-            }
-          } catch(_){ hasVipRole = false; }
 
           const data = {
             id: user.id,
